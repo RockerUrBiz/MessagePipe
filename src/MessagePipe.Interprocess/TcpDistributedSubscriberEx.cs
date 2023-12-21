@@ -4,14 +4,14 @@
 public sealed class TcpDistributedSubscriberEx<TKey, TMessage> : IDistributedSubscriber<TKey, TMessage>
 {
     // Pubsished from UdpWorker.
-    readonly MessagePipeInterprocessOptions options;
+    readonly MessagePipeInterprocessOptionsEx options;
     readonly IAsyncSubscriber<IInterprocessKey, IInterprocessValue> subscriberCore;
     readonly FilterAttachedMessageHandlerFactory syncHandlerFactory;
     readonly FilterAttachedAsyncMessageHandlerFactory asyncHandlerFactory;
 
     [MessagePipe.Interprocess.Internal.PreserveAttribute]
     public TcpDistributedSubscriberEx(TcpWorkerEx worker,
-                                      MessagePipeInterprocessTcpOptions options,
+                                      MessagePipeInterprocessTcpOptionsEx options,
                                       IAsyncSubscriber<IInterprocessKey, IInterprocessValue> subscriberCore,
                                       FilterAttachedMessageHandlerFactory syncHandlerFactory,
                                       FilterAttachedAsyncMessageHandlerFactory asyncHandlerFactory)
@@ -26,7 +26,7 @@ public sealed class TcpDistributedSubscriberEx<TKey, TMessage> : IDistributedSub
 #if NET5_0_OR_GREATER
     [MessagePipe.Interprocess.Internal.PreserveAttribute]
     public TcpDistributedSubscriberEx(TcpWorkerEx worker,
-                                      MessagePipeInterprocessTcpUdsOptions options,
+                                      MessagePipeInterprocessTcpUdsOptionsEx options,
                                       IAsyncSubscriber<IInterprocessKey, IInterprocessValue> subscriberCore,
                                       FilterAttachedMessageHandlerFactory syncHandlerFactory,
                                       FilterAttachedAsyncMessageHandlerFactory asyncHandlerFactory)

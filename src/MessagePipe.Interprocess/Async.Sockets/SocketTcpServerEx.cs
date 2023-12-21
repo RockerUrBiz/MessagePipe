@@ -11,7 +11,42 @@ internal sealed class SocketTcpServerEx : IDisposable
     private readonly SemaphoreSlim _maxNumberAcceptedClients; // Semaphore to control the number of connections
     private readonly SocketAsyncEventArgsPool saeaPool;
 
-    public SocketTcpServerEx(AddressFamily addressFamily, ProtocolType protocolType, int? sendBufferSize, int? recvBufferSize, SocketAsyncEventArgsPool pool)
+    public SocketTcpServerEx(AddressFamily addressFamily,
+                             ProtocolType protocolType,
+                             int? sendBufferSize,
+                             int? recvBufferSize,
+                             SocketAsyncEventArgsPool pool,
+                             string ipAddress,
+                             int port,
+                             int initialPoolCapacity,
+                             int maxPoolSize,
+                             int minPoolSize,
+                             TimeSpan maxIdleTime,
+                             TimeSpan contractionInterval)
+    {
+        socket = new Socket(addressFamily, SocketType.Stream, protocolType);
+
+        if (sendBufferSize.HasValue) socket.SendBufferSize = sendBufferSize.Value;
+
+        if (recvBufferSize.HasValue) socket.ReceiveBufferSize = recvBufferSize.Value;
+
+        _maxNumberAcceptedClients = new SemaphoreSlim(MaxConnections);
+
+        saeaPool = pool;
+
+        // Bind the socket to the local endpoint
+        var localEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(ipAddress), port);
+
+        socket.Bind(localEndPoint);
+
+        // Start listening on the socket
+        socket.Listen(MaxConnections); // You can adjust the backlog parameter as needed
+
+        // Initialize the pool
+        saeaPool = new SocketAsyncEventArgsPool(initialPoolCapacity, maxPoolSize, minPoolSize, maxIdleTime, contractionInterval);
+    }
+
+    public SocketTcpServerEx(AddressFamily addressFamily, ProtocolType protocolType, int? sendBufferSize, int? recvBufferSize, SocketAsyncEventArgsPool pool, string ipAddress, int port)
     {
         socket = new Socket(addressFamily, SocketType.Stream, protocolType);
         if (sendBufferSize.HasValue)
@@ -19,14 +54,28 @@ internal sealed class SocketTcpServerEx : IDisposable
         if (recvBufferSize.HasValue)
             socket.ReceiveBufferSize = recvBufferSize.Value;
 
-        _maxNumberAcceptedClients = new SemaphoreSlim(MaxConnections); // Initialize the semaphore
+        _maxNumberAcceptedClients = new SemaphoreSlim(MaxConnections);
         saeaPool = pool;
+
+        // Bind the socket to the local endpoint
+        var localEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(ipAddress), port);
+        socket.Bind(localEndPoint);
+
+        // Start listening on the socket
+        socket.Listen(MaxConnections); // You can adjust the backlog parameter as needed
     }
+
+
+    // Rest of your class implementation...
+
 
     public void StartAcceptLoopAsync(Action<SocketTcpClientEx> onAccept, CancellationToken cancellationToken)
     {
         void AcceptCallback(object sender, SocketAsyncEventArgs e)
         {
+            // Detach the event handler to avoid multiple invocations
+            e.Completed -= AcceptCallback;
+
             if (e.SocketError == SocketError.Success)
             {
                 var clientSocket = e.AcceptSocket;
@@ -35,32 +84,50 @@ internal sealed class SocketTcpServerEx : IDisposable
             }
             else
             {
-                // Handle accept errors here, if necessary
+                // Handle accept errors here
+                // ...
             }
 
             if (!cancellationToken.IsCancellationRequested)
             {
+                // Reset SAEA for reuse
                 e.AcceptSocket = null;
+                // Start a new accept operation
                 StartAccept(e);
             }
             else
             {
+                // Return SAEA to the pool
                 saeaPool.Return(e);
             }
         }
 
         void StartAccept(SocketAsyncEventArgs e)
         {
-            e.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptCallback);
+            // Attach the event handler
+            e.Completed += AcceptCallback;
+
             if (!socket.AcceptAsync(e))
             {
-                AcceptCallback(this, e);
+                // If the operation completed synchronously, call the callback directly
+                AcceptCallback(socket, e);
             }
         }
 
+        // Rent a SocketAsyncEventArgs from the pool and start the accept operation
         var acceptEventArgs = saeaPool.Rent();
-        StartAccept(acceptEventArgs);
+
+        if (acceptEventArgs != null)
+        {
+            StartAccept(acceptEventArgs);
+        }
+        else
+        {
+            // Optionally handle the case when acceptEventArgs is null
+            // ...
+        }
     }
+
 
     public void StartAcceptLoop(Action<SocketTcpClientEx> onAccept)
     {

@@ -24,7 +24,7 @@
         <ProjectReference Include="..\MessagePipe\MessagePipe.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
+    <ItemGroup Condition="$(TargetFramework) == 'netstandard2.1'">
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
         <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
     </ItemGroup>

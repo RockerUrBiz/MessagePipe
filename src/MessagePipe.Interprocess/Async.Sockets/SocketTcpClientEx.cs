@@ -42,7 +42,6 @@ namespace MessagePipe.Interprocess.Async.Sockets
         }
 #endif
 
-
         public async Task<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             var args = saeaPool.Rent();
@@ -65,7 +64,7 @@ namespace MessagePipe.Interprocess.Async.Sockets
             if (!socket.ReceiveAsync(args))
                 tcs.TrySetResult(args.BytesTransferred);
 
-            using (cancellationToken.Register(() => tcs.TrySetCanceled()))
+            await using (cancellationToken.Register(() => tcs.TrySetCanceled()))
             {
                 return await tcs.Task.ConfigureAwait(false);
             }
@@ -93,7 +92,7 @@ namespace MessagePipe.Interprocess.Async.Sockets
             if (!socket.SendAsync(args))
                 tcs.TrySetResult(args.BytesTransferred);
 
-            using (cancellationToken.Register(() => tcs.TrySetCanceled()))
+            await using (cancellationToken.Register(() => tcs.TrySetCanceled()))
             {
                 return await tcs.Task.ConfigureAwait(false);
             }

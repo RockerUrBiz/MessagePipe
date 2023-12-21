@@ -210,13 +210,15 @@ namespace MessagePipe.Interprocess.Workers
                         readBuffer = Array.Empty<byte>();
                         goto PARSE_MESSAGE;
                     }
-                    else if (readBuffer.Length > (messageLen + 4)) // over size
+
+                    if (readBuffer.Length > (messageLen + 4)) // over size
                     {
-                        value = readBuffer.Slice(4, messageLen);
+                        value      = readBuffer.Slice(4, messageLen);
                         readBuffer = readBuffer.Slice(messageLen + 4);
                         goto PARSE_MESSAGE;
                     }
-                    else // needs to read more
+
+                    // needs to read more
                     {
                         var readLen = readBuffer.Length;
 
