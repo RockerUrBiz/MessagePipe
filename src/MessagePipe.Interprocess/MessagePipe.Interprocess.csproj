@@ -4,10 +4,11 @@
         <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
         <WarningsAsErrors>true</WarningsAsErrors>
         <Configurations>Debug;Release;</Configurations>
+        <LangVersion>12.0</LangVersion>
 
         <!-- NuGet Packaging -->
         <PackageTags>pubsub;eventaggregator</PackageTags>
-        <Description>Interprocess extensions for MessagePipe.</Description>
+        <Description>Interprocess extensions for MessagePipe with extended support for SocketAsyncEventArgs</Description>
         <SignAssembly>true</SignAssembly>
         <IsPackable>true</IsPackable>
     </PropertyGroup>
@@ -32,6 +33,10 @@
     <!-- Copy files for Unity -->
     <PropertyGroup>
         <DestinationRoot>$(MSBuildProjectDirectory)\..\MessagePipe.Unity\Assets\Plugins\MessagePipe.Interprocess\Runtime\</DestinationRoot>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Title>RUB-TrueSpark-MessagePipe.Interprocess</Title>
+        <Authors>Cysharp/RocketUrBiz</Authors>
+        <Company>Cysharp/RocketUrBiz</Company>
     </PropertyGroup>
     <ItemGroup>
         <TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs" />
