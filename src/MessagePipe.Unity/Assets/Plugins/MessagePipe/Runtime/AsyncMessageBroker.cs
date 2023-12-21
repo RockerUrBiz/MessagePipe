@@ -1,8 +1,8 @@
-using MessagePipe.Internal;
+﻿using MessagePipe.Internal;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace MessagePipe
 {
@@ -24,12 +24,12 @@ namespace MessagePipe
             core.Publish(message, cancellationToken);
         }
 
-        public UniTask PublishAsync(TMessage message, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TMessage message, CancellationToken cancellationToken)
         {
             return core.PublishAsync(message, cancellationToken);
         }
 
-        public UniTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
         {
             return core.PublishAsync(message, publishStrategy, cancellationToken);
         }
@@ -70,13 +70,13 @@ namespace MessagePipe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UniTask PublishAsync(TMessage message, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TMessage message, CancellationToken cancellationToken)
         {
             return PublishAsync(message, defaultAsyncPublishStrategy, cancellationToken);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async UniTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
+        public async ValueTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
         {
             var array = handlers.GetValues();
             if (publishStrategy == AsyncPublishStrategy.Sequential)
@@ -166,22 +166,22 @@ namespace MessagePipe
             core.Publish(message, cancellationToken);
         }
 
-        public UniTask PublishAsync(TMessage message, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TMessage message, CancellationToken cancellationToken)
         {
             return core.PublishAsync(message, cancellationToken);
         }
 
-        public UniTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
         {
             return core.PublishAsync(message, publishStrategy, cancellationToken);
         }
 
-        public UniTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, CancellationToken cancellationToken)
+        public ValueTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, CancellationToken cancellationToken)
         {
             return SubscribeAsync(handler, Array.Empty<AsyncMessageHandlerFilter<TMessage>>(), cancellationToken);
         }
 
-        public UniTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, AsyncMessageHandlerFilter<TMessage>[] filters, CancellationToken cancellationToken)
+        public ValueTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, AsyncMessageHandlerFilter<TMessage>[] filters, CancellationToken cancellationToken)
         {
             handler = handlerFactory.CreateAsyncMessageHandler(handler, filters);
             return core.SubscribeAsync(handler, cancellationToken);
@@ -194,7 +194,7 @@ namespace MessagePipe
         static readonly bool IsValueType = typeof(TMessage).IsValueType;
 
         readonly AsyncMessageBrokerCore<TMessage> core;
-        TMessage lastMessage;
+        TMessage? lastMessage;
 
         [Preserve]
         public BufferedAsyncMessageBrokerCore(AsyncMessageBrokerCore<TMessage> core)
@@ -209,23 +209,23 @@ namespace MessagePipe
             core.Publish(message, cancellationToken);
         }
 
-        public UniTask PublishAsync(TMessage message, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TMessage message, CancellationToken cancellationToken)
         {
             lastMessage = message;
             return core.PublishAsync(message, cancellationToken);
         }
 
-        public UniTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
         {
             lastMessage = message;
             return core.PublishAsync(message, publishStrategy, cancellationToken);
         }
 
-        public async UniTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, CancellationToken cancellationToken)
+        public async ValueTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, CancellationToken cancellationToken)
         {
             if (IsValueType || lastMessage != null)
             {
-                await handler.HandleAsync(lastMessage, cancellationToken);
+                await handler.HandleAsync(lastMessage!, cancellationToken);
             }
             return core.Subscribe(handler);
         }

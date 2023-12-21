@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MessagePipe.Interprocess;
 using MessagePipe.Interprocess.Workers;
 #if !UNITY_2018_3_OR_NEWER

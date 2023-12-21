@@ -1,4 +1,4 @@
-using MessagePipe.Interprocess.Internal;
+﻿using MessagePipe.Interprocess.Internal;
 using System;
 using System.Threading;
 #if !UNITY_2018_3_OR_NEWER

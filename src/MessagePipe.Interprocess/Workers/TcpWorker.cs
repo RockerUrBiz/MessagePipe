@@ -1,7 +1,10 @@
 ﻿using MessagePack;
+
 using MessagePipe.Interprocess.Internal;
+
 #if !UNITY_2018_3_OR_NEWER
 using Microsoft.Extensions.DependencyInjection;
+
 using System.Threading.Channels;
 #endif
 using System;
@@ -200,6 +203,7 @@ namespace MessagePipe.Interprocess.Workers
                     }
 
                     var messageLen = MessageBuilder.FetchMessageLength(readBuffer.Span);
+
                     if (readBuffer.Length == (messageLen + 4)) // just size
                     {
                         value = readBuffer.Slice(4, messageLen); // skip length header
@@ -215,6 +219,7 @@ namespace MessagePipe.Interprocess.Workers
                     else // needs to read more
                     {
                         var readLen = readBuffer.Length;
+
                         if (readLen < (messageLen + 4))
                         {
                             if (readBuffer.Length != buffer.Length)
@@ -229,10 +234,15 @@ namespace MessagePipe.Interprocess.Workers
                                 Array.Resize(ref buffer, messageLen + 4);
                             }
                         }
+
                         var remain = messageLen - (readLen - 4);
+
                         await ReadFullyAsync(buffer, client, readLen, remain, token).ConfigureAwait(false);
+
                         value = buffer.AsMemory(4, messageLen);
+
                         readBuffer = Array.Empty<byte>();
+
                         goto PARSE_MESSAGE;
                     }
                 }

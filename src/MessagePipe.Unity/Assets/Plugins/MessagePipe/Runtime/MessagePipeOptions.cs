@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -75,8 +75,8 @@ namespace MessagePipe
 
         // auto-registration
 
-        internal Assembly[] autoregistrationAssemblies;
-        internal Type[] autoregistrationTypes;
+        internal Assembly[]? autoregistrationAssemblies;
+        internal Type[]? autoregistrationTypes;
 
         public void SetAutoRegistrationSearchAssemblies(params Assembly[] assemblies)
         {

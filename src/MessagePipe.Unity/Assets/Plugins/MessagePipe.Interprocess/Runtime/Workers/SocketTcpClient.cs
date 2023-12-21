@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace MessagePipe.Interprocess.Workers
 {
@@ -11,17 +11,18 @@ namespace MessagePipe.Interprocess.Workers
     internal sealed class SocketTcpServer : IDisposable
     {
         const int MaxConnections = 0x7fffffff;
+        private Semaphore _maxNumberAcceptedClients;
 
         readonly Socket socket;
 
         SocketTcpServer(AddressFamily addressFamily, ProtocolType protocolType, int? sendBufferSize, int? recvBufferSize)
         {
             socket = new Socket(addressFamily, SocketType.Stream, protocolType);
-            if(sendBufferSize.HasValue)
+            if (sendBufferSize.HasValue)
             {
                 socket.SendBufferSize = sendBufferSize.Value;
             }
-            if(recvBufferSize.HasValue)
+            if (recvBufferSize.HasValue)
             {
                 socket.ReceiveBufferSize = recvBufferSize.Value;
             }
@@ -54,12 +55,11 @@ namespace MessagePipe.Interprocess.Workers
             return server;
         }
 #endif
-
         public async void StartAcceptLoopAsync(Action<SocketTcpClient> onAccept, CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                Socket remote = default;
+                Socket remote = default!;
                 try
                 {
                     remote = await socket.AcceptAsync();
@@ -114,14 +114,14 @@ namespace MessagePipe.Interprocess.Workers
         }
 #endif
 
-        public async UniTask<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public async ValueTask<int> ReceiveAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
 #if NET5_0_OR_GREATER
             var xs = new ArraySegment<byte>(buffer, offset, count);
             var i = await socket.ReceiveAsync(xs, SocketFlags.None, cancellationToken).ConfigureAwait(false);
             return i;
 #else
-            var tcs = new UniTaskCompletionSource<int>();
+            var tcs = new TaskCompletionSource<int>();
 
             socket.BeginReceive(buffer, offset, count, SocketFlags.None, x =>
             {
@@ -142,12 +142,12 @@ namespace MessagePipe.Interprocess.Workers
 #endif
         }
 
-        public UniTask<int> SendAsync(byte[] buffer, CancellationToken cancellationToken = default)
+        public ValueTask<int> SendAsync(byte[] buffer, CancellationToken cancellationToken = default)
         {
 #if NET5_0_OR_GREATER
             return socket.SendAsync(buffer, SocketFlags.None, cancellationToken);
 #else
-            var tcs = new UniTaskCompletionSource<int>();
+            var tcs = new TaskCompletionSource<int>();
             socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, x =>
              {
                  int i;
@@ -164,7 +164,7 @@ namespace MessagePipe.Interprocess.Workers
              }, null);
 
 #if !UNITY_2018_3_OR_NEWER
-            return new UniTask<int>(tcs.Task);
+            return new ValueTask<int>(tcs.Task);
 #else
             return tcs.Task;
 #endif

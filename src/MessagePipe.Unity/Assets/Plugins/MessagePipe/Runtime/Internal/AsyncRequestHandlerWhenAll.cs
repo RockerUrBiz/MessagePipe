@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -8,7 +8,7 @@ namespace MessagePipe.Internal
     internal partial class AsyncRequestHandlerWhenAll<TRequest, TResponse> : ICriticalNotifyCompletion
     {
         int completedCount;
-        ExceptionDispatchInfo exception;
+        ExceptionDispatchInfo? exception;
         Action continuation = ContinuationSentinel.AvailableContinuation;
 
         readonly TResponse[] result;

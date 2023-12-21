@@ -1,6 +1,7 @@
-﻿using MessagePack;
+﻿using System;
+
+using MessagePack;
 using MessagePack.Resolvers;
-using System;
 
 namespace MessagePipe.Interprocess
 {
@@ -10,7 +11,7 @@ namespace MessagePipe.Interprocess
         public InstanceLifetime InstanceLifetime { get; set; }
         public Action<string, Exception> UnhandledErrorHandler { get; set; }
 
-        public MessagePipeInterprocessOptions()
+        protected MessagePipeInterprocessOptions()
         {
             this.MessagePackSerializerOptions = ContractlessStandardResolver.Options;
             this.InstanceLifetime = InstanceLifetime.Scoped;
@@ -22,76 +23,38 @@ namespace MessagePipe.Interprocess
         }
     }
 
-    public sealed class MessagePipeInterprocessUdpOptions : MessagePipeInterprocessOptions
+    public sealed class MessagePipeInterprocessUdpOptions(string host, int port) : MessagePipeInterprocessOptions
     {
-        public string Host { get; }
-        public int Port { get; }
-
-        public MessagePipeInterprocessUdpOptions(string host, int port)
-            : base()
-        {
-            this.Host = host;
-            this.Port = port;
-        }
+        public string Host { get; } = host;
+        public int Port { get; } = port;
     }
 
-    public sealed class MessagePipeInterprocessNamedPipeOptions : MessagePipeInterprocessOptions
+    public sealed class MessagePipeInterprocessNamedPipeOptions(string pipeName) : MessagePipeInterprocessOptions
     {
-        public string PipeName { get; }
-        public string ServerName { get; set; }
-        public bool? HostAsServer { get; set; }
-
-        public MessagePipeInterprocessNamedPipeOptions(string pipeName)
-            : base()
-        {
-            this.PipeName = pipeName;
-            this.ServerName = ".";
-            this.HostAsServer = null;
-        }
+        public string PipeName { get; } = pipeName;
+        public string ServerName { get; set; } = ".";
+        public bool? HostAsServer { get; set; } = null;
     }
 
-    public sealed class MessagePipeInterprocessTcpOptions : MessagePipeInterprocessOptions
+    public sealed class MessagePipeInterprocessTcpOptions(string host, int port) : MessagePipeInterprocessOptions
     {
-        public string Host { get; }
-        public int Port { get; }
-        public bool? HostAsServer { get; set; }
-
-        public MessagePipeInterprocessTcpOptions(string host, int port)
-            : base()
-        {
-            this.Host = host;
-            this.Port = port;
-            this.HostAsServer = null;
-        }
+        public string Host { get; } = host;
+        public int Port { get; } = port;
+        public bool? HostAsServer { get; set; } = null;
     }
 #if NET5_0_OR_GREATER
-    public sealed class MessagePipeInterprocessUdpUdsOptions : MessagePipeInterprocessOptions
+    public sealed class MessagePipeInterprocessUdpUdsOptions(string socketPath) : MessagePipeInterprocessOptions
     {
-        public string SocketPath { get; set; }
-
-        public MessagePipeInterprocessUdpUdsOptions(string socketPath)
-            : base()
-        {
-            this.SocketPath = socketPath;
-        }
-
+        public string SocketPath { get; set; } = socketPath;
     }
-    public sealed class MessagePipeInterprocessTcpUdsOptions : MessagePipeInterprocessOptions
+    public sealed class MessagePipeInterprocessTcpUdsOptions(string socketPath,
+                                                             int? sendBufferSize = null,
+                                                             int? recvBufferSize = null) : MessagePipeInterprocessOptions
     {
-        public string SocketPath { get; set; }
-        public int? SendBufferSize { get; set; }
-        public int? ReceiveBufferSize { get; set; }
-        public bool? HostAsServer { get; set; }
-        public MessagePipeInterprocessTcpUdsOptions(string socketPath): this(socketPath, null, null)
-        {
-        }
-        public MessagePipeInterprocessTcpUdsOptions(string socketPath, int? sendBufferSize, int? recvBufferSize)
-        {
-            this.SocketPath = socketPath;
-            HostAsServer = null;
-            this.SendBufferSize = sendBufferSize;
-            this.ReceiveBufferSize = recvBufferSize;
-        }
+        public string SocketPath { get; set; } = socketPath;
+        public int? SendBufferSize { get; set; } = sendBufferSize;
+        public int? ReceiveBufferSize { get; set; } = recvBufferSize;
+        public bool? HostAsServer { get; set; } = null;
     }
 #endif
 }

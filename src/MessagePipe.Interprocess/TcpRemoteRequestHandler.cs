@@ -1,8 +1,8 @@
-﻿using MessagePipe.Interprocess.Internal;
-using MessagePipe.Interprocess.Workers;
-using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+
+using MessagePipe.Interprocess.Internal;
+using MessagePipe.Interprocess.Workers;
 
 namespace MessagePipe.Interprocess
 {

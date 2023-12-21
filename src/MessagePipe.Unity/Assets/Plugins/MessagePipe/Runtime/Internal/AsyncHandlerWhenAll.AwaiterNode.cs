@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 
@@ -8,11 +8,11 @@ namespace MessagePipe.Internal
     {
         internal class AwaiterNode : IPoolStackNode<AwaiterNode>
         {
-            AwaiterNode nextNode;
-            public ref AwaiterNode NextNode => ref nextNode;
+            AwaiterNode? nextNode;
+            public ref AwaiterNode? NextNode => ref nextNode;
 
-            AsyncHandlerWhenAll<T> parent = default;
-            Cysharp.Threading.Tasks.UniTask.Awaiter awaiter;
+            AsyncHandlerWhenAll<T> parent = default!;
+            ValueTaskAwaiter awaiter;
 
             readonly Action continuation;
 
@@ -23,13 +23,13 @@ namespace MessagePipe.Internal
                 this.continuation = OnCompleted;
             }
 
-            public static void RegisterUnsafeOnCompleted(AsyncHandlerWhenAll<T> parent, Cysharp.Threading.Tasks.UniTask.Awaiter awaiter)
+            public static void RegisterUnsafeOnCompleted(AsyncHandlerWhenAll<T> parent, ValueTaskAwaiter awaiter)
             {
                 if (!pool.TryPop(out var result))
                 {
                     result = new AwaiterNode();
                 }
-                result.parent = parent;
+                result!.parent = parent;
                 result.awaiter = awaiter;
 
                 result.awaiter.UnsafeOnCompleted(result.continuation);
@@ -39,7 +39,7 @@ namespace MessagePipe.Internal
             {
                 var p = this.parent;
                 var a = this.awaiter;
-                this.parent = null;
+                this.parent = null!;
                 this.awaiter = default;
 
                 pool.TryPush(this);

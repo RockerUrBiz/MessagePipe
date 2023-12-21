@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
+        <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
         <WarningsAsErrors>true</WarningsAsErrors>
         <Configurations>Debug;Release;</Configurations>
 
@@ -17,14 +17,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MessagePack" Version="2.3.85" />
-        <PackageReference Include="System.IO.Pipelines" Version="6.0.3" />
+        <PackageReference Include="MessagePack" Version="2.5.140" />
+        <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
+        <PackageReference Include="System.Net.Sockets" Version="4.3.0" />
+        <PackageReference Include="System.Private.ServiceModel" Version="4.10.3" />
         <ProjectReference Include="..\MessagePipe\MessagePipe.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
-        <PackageReference Include="System.Threading.Channels" Version="6.0.0" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+        <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
     </ItemGroup>
 
     <!-- Copy files for Unity -->
@@ -34,12 +36,17 @@
     <ItemGroup>
         <TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs" />
     </ItemGroup>
+    <ItemGroup>
+      <TargetFiles1 Remove="Async.Sockets\SocketAsyncEventArgsPool.cs" />
+      <TargetFiles1 Remove="Async.Sockets\SocketTcpClientEx.cs" />
+      <TargetFiles1 Remove="MessagePipeInterprocessOptionsEx.cs" />
+      <TargetFiles1 Remove="TcpDistributedSubscriberEx.cs" />
+      <TargetFiles1 Remove="TcpRemoteRequestHandlerEx.cs" />
+    </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Copy SourceFiles="@(TargetFiles1)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />
 
-        <!-- After copy, replace for unity codes -->
-        <Exec Command="dotnet run --no-build -c $(ConfigurationName) --project $(MSBuildProjectDirectory)\..\..\tools\PostBuildUtility\PostBuildUtility.csproj -- replace-to-unity $(DestinationRoot)" />
     </Target>
 
 </Project>

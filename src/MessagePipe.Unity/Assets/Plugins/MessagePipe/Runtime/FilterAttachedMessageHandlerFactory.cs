@@ -1,10 +1,10 @@
-using MessagePipe.Internal;
+﻿using MessagePipe.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace MessagePipe
 {

@@ -11,17 +11,18 @@ namespace MessagePipe.Interprocess.Workers
     internal sealed class SocketTcpServer : IDisposable
     {
         const int MaxConnections = 0x7fffffff;
+        private Semaphore _maxNumberAcceptedClients;
 
         readonly Socket socket;
 
         SocketTcpServer(AddressFamily addressFamily, ProtocolType protocolType, int? sendBufferSize, int? recvBufferSize)
         {
             socket = new Socket(addressFamily, SocketType.Stream, protocolType);
-            if(sendBufferSize.HasValue)
+            if (sendBufferSize.HasValue)
             {
                 socket.SendBufferSize = sendBufferSize.Value;
             }
-            if(recvBufferSize.HasValue)
+            if (recvBufferSize.HasValue)
             {
                 socket.ReceiveBufferSize = recvBufferSize.Value;
             }
@@ -54,7 +55,6 @@ namespace MessagePipe.Interprocess.Workers
             return server;
         }
 #endif
-
         public async void StartAcceptLoopAsync(Action<SocketTcpClient> onAccept, CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)

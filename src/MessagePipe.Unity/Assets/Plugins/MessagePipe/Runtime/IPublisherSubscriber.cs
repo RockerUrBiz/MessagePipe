@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace MessagePipe
 {
@@ -13,7 +13,7 @@ namespace MessagePipe
 
     public interface IAsyncMessageHandler<TMessage>
     {
-        UniTask HandleAsync(TMessage message, CancellationToken cancellationToken);
+        ValueTask HandleAsync(TMessage message, CancellationToken cancellationToken);
     }
 
     // Keyless
@@ -31,8 +31,8 @@ namespace MessagePipe
     public interface IAsyncPublisher<TMessage>
     {
         void Publish(TMessage message, CancellationToken cancellationToken = default(CancellationToken));
-        UniTask PublishAsync(TMessage message, CancellationToken cancellationToken = default(CancellationToken));
-        UniTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken = default(CancellationToken));
+        ValueTask PublishAsync(TMessage message, CancellationToken cancellationToken = default(CancellationToken));
+        ValueTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken = default(CancellationToken));
     }
 
     public interface IAsyncSubscriber<TMessage>
@@ -52,39 +52,39 @@ namespace MessagePipe
     // Keyed
 
     public interface IPublisher<TKey, TMessage>
-        
+        where TKey : notnull
     {
         void Publish(TKey key, TMessage message);
     }
 
     public interface ISubscriber<TKey, TMessage>
-        
+        where TKey : notnull
     {
         IDisposable Subscribe(TKey key, IMessageHandler<TMessage> handler, params MessageHandlerFilter<TMessage>[] filters);
     }
 
     public interface IAsyncPublisher<TKey, TMessage>
-        
+        where TKey : notnull
     {
         void Publish(TKey key, TMessage message, CancellationToken cancellationToken = default(CancellationToken));
-        UniTask PublishAsync(TKey key, TMessage message, CancellationToken cancellationToken = default(CancellationToken));
-        UniTask PublishAsync(TKey key, TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken = default(CancellationToken));
+        ValueTask PublishAsync(TKey key, TMessage message, CancellationToken cancellationToken = default(CancellationToken));
+        ValueTask PublishAsync(TKey key, TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken = default(CancellationToken));
     }
 
     public interface IAsyncSubscriber<TKey, TMessage>
-        
+        where TKey : notnull
     {
         IDisposable Subscribe(TKey key, IAsyncMessageHandler<TMessage> asyncHandler, params AsyncMessageHandlerFilter<TMessage>[] filters);
     }
 
-    public interface ISingletonPublisher<TKey, TMessage> : IPublisher<TKey, TMessage>  { }
-    public interface ISingletonSubscriber<TKey, TMessage> : ISubscriber<TKey, TMessage>  { }
-    public interface IScopedPublisher<TKey, TMessage> : IPublisher<TKey, TMessage>  { }
-    public interface IScopedSubscriber<TKey, TMessage> : ISubscriber<TKey, TMessage>  { }
-    public interface ISingletonAsyncPublisher<TKey, TMessage> : IAsyncPublisher<TKey, TMessage>  { }
-    public interface ISingletonAsyncSubscriber<TKey, TMessage> : IAsyncSubscriber<TKey, TMessage>  { }
-    public interface IScopedAsyncPublisher<TKey, TMessage> : IAsyncPublisher<TKey, TMessage>  { }
-    public interface IScopedAsyncSubscriber<TKey, TMessage> : IAsyncSubscriber<TKey, TMessage>  { }
+    public interface ISingletonPublisher<TKey, TMessage> : IPublisher<TKey, TMessage> where TKey : notnull { }
+    public interface ISingletonSubscriber<TKey, TMessage> : ISubscriber<TKey, TMessage> where TKey : notnull { }
+    public interface IScopedPublisher<TKey, TMessage> : IPublisher<TKey, TMessage> where TKey : notnull { }
+    public interface IScopedSubscriber<TKey, TMessage> : ISubscriber<TKey, TMessage> where TKey : notnull { }
+    public interface ISingletonAsyncPublisher<TKey, TMessage> : IAsyncPublisher<TKey, TMessage> where TKey : notnull { }
+    public interface ISingletonAsyncSubscriber<TKey, TMessage> : IAsyncSubscriber<TKey, TMessage> where TKey : notnull { }
+    public interface IScopedAsyncPublisher<TKey, TMessage> : IAsyncPublisher<TKey, TMessage> where TKey : notnull { }
+    public interface IScopedAsyncSubscriber<TKey, TMessage> : IAsyncSubscriber<TKey, TMessage> where TKey : notnull { }
 
     // buffered keyless
 
@@ -101,14 +101,14 @@ namespace MessagePipe
     public interface IBufferedAsyncPublisher<TMessage>
     {
         void Publish(TMessage message, CancellationToken cancellationToken = default(CancellationToken));
-        UniTask PublishAsync(TMessage message, CancellationToken cancellationToken = default(CancellationToken));
-        UniTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken = default(CancellationToken));
+        ValueTask PublishAsync(TMessage message, CancellationToken cancellationToken = default(CancellationToken));
+        ValueTask PublishAsync(TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken = default(CancellationToken));
     }
 
     public interface IBufferedAsyncSubscriber<TMessage>
     {
-        UniTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, CancellationToken cancellationToken = default);
-        UniTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, AsyncMessageHandlerFilter<TMessage>[] filters, CancellationToken cancellationToken = default);
+        ValueTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, CancellationToken cancellationToken = default);
+        ValueTask<IDisposable> SubscribeAsync(IAsyncMessageHandler<TMessage> handler, AsyncMessageHandlerFilter<TMessage>[] filters, CancellationToken cancellationToken = default);
     }
 
     // NOTE: buffered Keyed is undefined

@@ -1,14 +1,17 @@
-using MessagePack;
+﻿using MessagePack;
+
 using MessagePipe.Interprocess.Internal;
+
 #if !UNITY_2018_3_OR_NEWER
 using Microsoft.Extensions.DependencyInjection;
+
 using System.Threading.Channels;
 #endif
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -32,7 +35,7 @@ namespace MessagePipe.Interprocess.Workers
 
         // request-response
         int messageId = 0;
-        ConcurrentDictionary<int, UniTaskCompletionSource<IInterprocessValue>> responseCompletions = new ConcurrentDictionary<int, UniTaskCompletionSource<IInterprocessValue>>();
+        ConcurrentDictionary<int, TaskCompletionSource<IInterprocessValue>> responseCompletions = new ConcurrentDictionary<int, TaskCompletionSource<IInterprocessValue>>();
 
         // create from DI
         [Preserve]
@@ -117,7 +120,7 @@ namespace MessagePipe.Interprocess.Workers
             channel.Writer.TryWrite(buffer);
         }
 
-        public async UniTask<TResponse> RequestAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
+        public async ValueTask<TResponse> RequestAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
         {
             if (Interlocked.Increment(ref initializedClient) == 1) // first incr, channel not yet started
             {
@@ -126,7 +129,7 @@ namespace MessagePipe.Interprocess.Workers
             }
 
             var mid = Interlocked.Increment(ref messageId);
-            var tcs = new UniTaskCompletionSource<IInterprocessValue>();
+            var tcs = new TaskCompletionSource<IInterprocessValue>();
             responseCompletions[mid] = tcs;
             var buffer = MessageBuilder.BuildRemoteRequestMessage(typeof(TRequest), typeof(TResponse), mid, request, options.MessagePackSerializerOptions);
             channel.Writer.TryWrite(buffer);
@@ -200,6 +203,7 @@ namespace MessagePipe.Interprocess.Workers
                     }
 
                     var messageLen = MessageBuilder.FetchMessageLength(readBuffer.Span);
+
                     if (readBuffer.Length == (messageLen + 4)) // just size
                     {
                         value = readBuffer.Slice(4, messageLen); // skip length header
@@ -215,6 +219,7 @@ namespace MessagePipe.Interprocess.Workers
                     else // needs to read more
                     {
                         var readLen = readBuffer.Length;
+
                         if (readLen < (messageLen + 4))
                         {
                             if (readBuffer.Length != buffer.Length)
@@ -229,10 +234,15 @@ namespace MessagePipe.Interprocess.Workers
                                 Array.Resize(ref buffer, messageLen + 4);
                             }
                         }
+
                         var remain = messageLen - (readLen - 4);
+
                         await ReadFullyAsync(buffer, client, readLen, remain, token).ConfigureAwait(false);
+
                         value = buffer.AsMemory(4, messageLen);
+
                         readBuffer = Array.Empty<byte>();
+
                         goto PARSE_MESSAGE;
                     }
                 }
@@ -271,17 +281,17 @@ namespace MessagePipe.Interprocess.Workers
                                     var genericArgs = interfaceType.GetGenericArguments(); // [TRequest, TResponse]
                                     // Unity IL2CPP does not work(can not invoke nongenerics MessagePackSerializer)
                                     var request = MessagePackSerializer.Deserialize(genericArgs[0], message.ValueMemory, options.MessagePackSerializerOptions);
-                                    var responseTask = coreInterfaceType.GetMethod("InvokeAsync").Invoke(service, new[] { request, CancellationToken.None });
+                                    var responseTask = coreInterfaceType.GetMethod("InvokeAsync")!.Invoke(service, new[] { request, CancellationToken.None });
 #if !UNITY_2018_3_OR_NEWER
-                                    var task = typeof(UniTask<>).MakeGenericType(genericArgs[1]).GetMethod("AsTask").Invoke(responseTask, null);
+                                    var task = typeof(ValueTask<>).MakeGenericType(genericArgs[1]).GetMethod("AsTask")!.Invoke(responseTask, null);
 #else
                                     var asTask = typeof(UniTaskExtensions).GetMethods().First(x => x.IsGenericMethod && x.Name == "AsTask")
                                         .MakeGenericMethod(genericArgs[1]);
                                     var task = asTask.Invoke(null, new[] { responseTask });
 #endif
-                                    await ((System.Threading.Tasks.Task)task); // Task<T> -> Task
-                                    var result = task.GetType().GetProperty("Result").GetValue(task);
-                                    resultBytes = MessageBuilder.BuildRemoteResponseMessage(mid, genericArgs[1], result, options.MessagePackSerializerOptions);
+                                    await ((System.Threading.Tasks.Task)task!); // Task<T> -> Task
+                                    var result = task.GetType().GetProperty("Result")!.GetValue(task);
+                                    resultBytes = MessageBuilder.BuildRemoteResponseMessage(mid, genericArgs[1], result!, options.MessagePackSerializerOptions);
                                 }
                                 catch (Exception ex)
                                 {
@@ -333,7 +343,7 @@ namespace MessagePipe.Interprocess.Workers
             return MessagePackSerializer.Deserialize<T>(buffer, options);
         }
 
-        static async UniTask ReadFullyAsync(byte[] buffer, SocketTcpClient client, int index, int remain, CancellationToken token)
+        static async ValueTask ReadFullyAsync(byte[] buffer, SocketTcpClient client, int index, int remain, CancellationToken token)
         {
             while (remain > 0)
             {

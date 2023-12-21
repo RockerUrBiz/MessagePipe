@@ -1,14 +1,14 @@
-using MessagePipe.Internal;
+﻿using MessagePipe.Internal;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace MessagePipe
 {
     [Preserve]
     public class AsyncMessageBroker<TKey, TMessage> : IAsyncPublisher<TKey, TMessage>, IAsyncSubscriber<TKey, TMessage>
-        
+        where TKey : notnull
     {
         readonly AsyncMessageBrokerCore<TKey, TMessage> core;
         readonly FilterAttachedAsyncMessageHandlerFactory handlerFactory;
@@ -25,12 +25,12 @@ namespace MessagePipe
             core.Publish(key, message, cancellationToken);
         }
 
-        public UniTask PublishAsync(TKey key, TMessage message, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TKey key, TMessage message, CancellationToken cancellationToken)
         {
             return core.PublishAsync(key, message, cancellationToken);
         }
 
-        public UniTask PublishAsync(TKey key, TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TKey key, TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
         {
             return core.PublishAsync(key, message, publishStrategy, cancellationToken);
         }
@@ -43,7 +43,7 @@ namespace MessagePipe
 
     [Preserve]
     public class AsyncMessageBrokerCore<TKey, TMessage> : IDisposable
-        
+        where TKey : notnull
     {
         readonly Dictionary<TKey, HandlerHolder> handlerGroup;
         readonly MessagePipeDiagnosticsInfo diagnotics;
@@ -64,7 +64,7 @@ namespace MessagePipe
 
         public void Publish(TKey key, TMessage message, CancellationToken cancellationToken)
         {
-            IAsyncMessageHandler<TMessage>[] handlers;
+            IAsyncMessageHandler<TMessage>?[] handlers;
             lock (gate)
             {
                 if (!handlerGroup.TryGetValue(key, out var holder))
@@ -80,14 +80,14 @@ namespace MessagePipe
             }
         }
 
-        public UniTask PublishAsync(TKey key, TMessage message, CancellationToken cancellationToken)
+        public ValueTask PublishAsync(TKey key, TMessage message, CancellationToken cancellationToken)
         {
             return PublishAsync(key, message, defaultAsyncPublishStrategy, cancellationToken);
         }
 
-        public async UniTask PublishAsync(TKey key, TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
+        public async ValueTask PublishAsync(TKey key, TMessage message, AsyncPublishStrategy publishStrategy, CancellationToken cancellationToken)
         {
-            IAsyncMessageHandler<TMessage>[] handlers;
+            IAsyncMessageHandler<TMessage>?[] handlers;
             lock (gate)
             {
                 if (!handlerGroup.TryGetValue(key, out var holder))
@@ -155,7 +155,7 @@ namespace MessagePipe
                 this.core = core;
             }
 
-            public IAsyncMessageHandler<TMessage>[] GetHandlers() => handlers.GetValues();
+            public IAsyncMessageHandler<TMessage>?[] GetHandlers() => handlers.GetValues();
 
             public IDisposable Subscribe(TKey key, IAsyncMessageHandler<TMessage> handler)
             {
@@ -217,7 +217,7 @@ namespace MessagePipe
 
     [Preserve]
     public class SingletonAsyncMessageBroker<TKey, TMessage> : AsyncMessageBroker<TKey, TMessage>, ISingletonAsyncPublisher<TKey, TMessage>, ISingletonAsyncSubscriber<TKey, TMessage>
-        
+        where TKey : notnull
     {
         public SingletonAsyncMessageBroker(SingletonAsyncMessageBrokerCore<TKey, TMessage> core, FilterAttachedAsyncMessageHandlerFactory handlerFactory)
             : base(core, handlerFactory)
@@ -227,7 +227,7 @@ namespace MessagePipe
 
     [Preserve]
     public class SingletonAsyncMessageBrokerCore<TKey, TMessage> : AsyncMessageBrokerCore<TKey, TMessage>
-        
+        where TKey : notnull
     {
         public SingletonAsyncMessageBrokerCore(MessagePipeDiagnosticsInfo diagnotics, MessagePipeOptions options)
             : base(diagnotics, options)
@@ -237,7 +237,7 @@ namespace MessagePipe
 
     [Preserve]
     public class ScopedAsyncMessageBroker<TKey, TMessage> : AsyncMessageBroker<TKey, TMessage>, IScopedAsyncPublisher<TKey, TMessage>, IScopedAsyncSubscriber<TKey, TMessage>
-        
+        where TKey : notnull
     {
         public ScopedAsyncMessageBroker(ScopedAsyncMessageBrokerCore<TKey, TMessage> core, FilterAttachedAsyncMessageHandlerFactory handlerFactory)
             : base(core, handlerFactory)
@@ -247,7 +247,7 @@ namespace MessagePipe
 
     [Preserve]
     public class ScopedAsyncMessageBrokerCore<TKey, TMessage> : AsyncMessageBrokerCore<TKey, TMessage>
-        
+        where TKey : notnull
     {
         public ScopedAsyncMessageBrokerCore(MessagePipeDiagnosticsInfo diagnotics, MessagePipeOptions options)
             : base(diagnotics, options)

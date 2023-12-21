@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFrameworks>net7.0;net8.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
@@ -17,8 +17,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AlterNats" Version="1.0.0" />
-		<PackageReference Include="MessagePack" Version="2.3.85" />
+		<PackageReference Include="AlterNats" Version="1.0.6" />
+		<PackageReference Include="MessagePack" Version="2.5.140" />
 	</ItemGroup>
 
 	<ItemGroup>

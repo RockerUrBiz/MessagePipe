@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 #if !UNITY_2018_3_OR_NEWER
 using System.Threading.Channels;
 #endif
@@ -10,24 +10,24 @@ namespace MessagePipe
 {
     public static partial class SubscriberExtensions
     {
-        public static IUniTaskAsyncEnumerable<TMessage> AsAsyncEnumerable<TMessage>(this IAsyncSubscriber<TMessage> subscriber, params AsyncMessageHandlerFilter<TMessage>[] filters)
+        public static IAsyncEnumerable<TMessage> AsAsyncEnumerable<TMessage>(this IAsyncSubscriber<TMessage> subscriber, params AsyncMessageHandlerFilter<TMessage>[] filters)
         {
             return new AsyncEnumerableAsyncSubscriber<TMessage>(subscriber, filters);
         }
 
-        public static IUniTaskAsyncEnumerable<TMessage> AsAsyncEnumerable<TMessage>(this IBufferedAsyncSubscriber<TMessage> subscriber, params AsyncMessageHandlerFilter<TMessage>[] filters)
+        public static IAsyncEnumerable<TMessage> AsAsyncEnumerable<TMessage>(this IBufferedAsyncSubscriber<TMessage> subscriber, params AsyncMessageHandlerFilter<TMessage>[] filters)
         {
             return new BufferedAsyncEnumerableAsyncSubscriber<TMessage>(subscriber, filters);
         }
 
-        public static IUniTaskAsyncEnumerable<TMessage> AsAsyncEnumerable<TKey, TMessage>(this IAsyncSubscriber<TKey, TMessage> subscriber, TKey key, params AsyncMessageHandlerFilter<TMessage>[] filters)
-            
+        public static IAsyncEnumerable<TMessage> AsAsyncEnumerable<TKey, TMessage>(this IAsyncSubscriber<TKey, TMessage> subscriber, TKey key, params AsyncMessageHandlerFilter<TMessage>[] filters)
+            where TKey : notnull
         {
             return new AsyncEnumerableAsyncSubscriber<TKey, TMessage>(key, subscriber, filters);
         }
     }
 
-    internal class AsyncEnumerableAsyncSubscriber<TMessage> : IUniTaskAsyncEnumerable<TMessage>
+    internal class AsyncEnumerableAsyncSubscriber<TMessage> : IAsyncEnumerable<TMessage>
     {
         readonly IAsyncSubscriber<TMessage> subscriber;
         readonly AsyncMessageHandlerFilter<TMessage>[] filters;
@@ -38,7 +38,7 @@ namespace MessagePipe
             this.filters = filters;
         }
 
-        public IUniTaskAsyncEnumerator<TMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public IAsyncEnumerator<TMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             var disposable = DisposableBag.CreateSingleAssignment();
             var e = new AsyncMessageHandlerEnumerator<TMessage>(disposable, cancellationToken);
@@ -47,7 +47,7 @@ namespace MessagePipe
         }
     }
 
-    internal class BufferedAsyncEnumerableAsyncSubscriber<TMessage> : IUniTaskAsyncEnumerable<TMessage>
+    internal class BufferedAsyncEnumerableAsyncSubscriber<TMessage> : IAsyncEnumerable<TMessage>
     {
         readonly IBufferedAsyncSubscriber<TMessage> subscriber;
         readonly AsyncMessageHandlerFilter<TMessage>[] filters;
@@ -58,7 +58,7 @@ namespace MessagePipe
             this.filters = filters;
         }
 
-        public IUniTaskAsyncEnumerator<TMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public IAsyncEnumerator<TMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             var disposable = DisposableBag.CreateSingleAssignment();
             var e = new AsyncMessageHandlerEnumerator<TMessage>(disposable, cancellationToken);
@@ -67,14 +67,14 @@ namespace MessagePipe
             return e;
         }
 
-        async void SetDisposableAsync(UniTask<IDisposable> task, SingleAssignmentDisposable d)
+        async void SetDisposableAsync(ValueTask<IDisposable> task, SingleAssignmentDisposable d)
         {
             d.Disposable = await task;
         }
     }
 
-    internal class AsyncEnumerableAsyncSubscriber<TKey, TMessage> : IUniTaskAsyncEnumerable<TMessage>
-        
+    internal class AsyncEnumerableAsyncSubscriber<TKey, TMessage> : IAsyncEnumerable<TMessage>
+        where TKey : notnull
     {
         readonly TKey key;
         readonly IAsyncSubscriber<TKey, TMessage> subscriber;
@@ -87,7 +87,7 @@ namespace MessagePipe
             this.filters = filters;
         }
 
-        public IUniTaskAsyncEnumerator<TMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public IAsyncEnumerator<TMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             var disposable = DisposableBag.CreateSingleAssignment();
             var e = new AsyncMessageHandlerEnumerator<TMessage>(disposable, cancellationToken);
@@ -96,7 +96,7 @@ namespace MessagePipe
         }
     }
 
-    internal class AsyncMessageHandlerEnumerator<TMessage> : IUniTaskAsyncEnumerator<TMessage>, IAsyncMessageHandler<TMessage>
+    internal class AsyncMessageHandlerEnumerator<TMessage> : IAsyncEnumerator<TMessage>, IAsyncMessageHandler<TMessage>
     {
         Channel<TMessage> channel;
         CancellationToken cancellationToken;
@@ -118,7 +118,7 @@ namespace MessagePipe
 #endif
         }
 
-        TMessage IUniTaskAsyncEnumerator<TMessage>.Current
+        TMessage IAsyncEnumerator<TMessage>.Current
         {
             get
             {
@@ -130,18 +130,18 @@ namespace MessagePipe
             }
         }
 
-        UniTask<bool> IUniTaskAsyncEnumerator<TMessage>.MoveNextAsync()
+        ValueTask<bool> IAsyncEnumerator<TMessage>.MoveNextAsync()
         {
             return channel.Reader.WaitToReadAsync(cancellationToken);
         }
 
-        UniTask IAsyncMessageHandler<TMessage>.HandleAsync(TMessage message, CancellationToken cancellationToken)
+        ValueTask IAsyncMessageHandler<TMessage>.HandleAsync(TMessage message, CancellationToken cancellationToken)
         {
             channel.Writer.TryWrite(message);
             return default;
         }
 
-        UniTask IUniTaskAsyncDisposable.DisposeAsync()
+        ValueTask IAsyncDisposable.DisposeAsync()
         {
             singleAssignmentDisposable.Dispose(); // unsubscribe message.
             return default;

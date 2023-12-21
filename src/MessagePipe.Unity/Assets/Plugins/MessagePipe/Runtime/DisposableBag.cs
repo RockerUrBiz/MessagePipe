@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -114,7 +114,7 @@ namespace MessagePipe
 
     public sealed class SingleAssignmentDisposable : IDisposable
     {
-        IDisposable inner;
+        IDisposable? inner;
         bool isDisposed;
         readonly object gate = new object();
 

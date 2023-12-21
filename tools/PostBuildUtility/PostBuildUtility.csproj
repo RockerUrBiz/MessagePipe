@@ -2,13 +2,13 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
         <Configurations>Debug;Release;WinBenchmark</Configurations>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="ConsoleAppFramework" Version="4.0.6" />
+        <PackageReference Include="ConsoleAppFramework" Version="4.2.4" />
     </ItemGroup>
 
 </Project>

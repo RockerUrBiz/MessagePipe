@@ -1,7 +1,7 @@
-using MessagePipe.Internal;
+﻿using MessagePipe.Internal;
 using System;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace MessagePipe
 {
@@ -74,7 +74,7 @@ namespace MessagePipe
     public abstract class AsyncMessageHandlerFilter<TMessage> : IAsyncMessageHandlerFilter
     {
         public int Order { get; set; }
-        public abstract UniTask HandleAsync(TMessage message, CancellationToken cancellationToken, Func<TMessage, CancellationToken, UniTask> next);
+        public abstract ValueTask HandleAsync(TMessage message, CancellationToken cancellationToken, Func<TMessage, CancellationToken, ValueTask> next);
     }
 
     // Req-Res Filter
@@ -136,6 +136,6 @@ namespace MessagePipe
     public abstract class AsyncRequestHandlerFilter<TRequest, TResponse> : IAsyncRequestHandlerFilter
     {
         public int Order { get; set; }
-        public abstract UniTask<TResponse> InvokeAsync(TRequest request, CancellationToken cancellationToken, Func<TRequest, CancellationToken, UniTask<TResponse>> next);
+        public abstract ValueTask<TResponse> InvokeAsync(TRequest request, CancellationToken cancellationToken, Func<TRequest, CancellationToken, ValueTask<TResponse>> next);
     }
 }
