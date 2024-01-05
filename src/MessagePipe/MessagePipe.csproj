@@ -36,6 +36,10 @@
             <DependentUpon>Disposables.tt</DependentUpon>
         </Compile>
     </ItemGroup>
+  
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="PowerShell -NoProfile -ExecutionPolicy Bypass -File $(SolutionDir)RegisterNuGetRepo.ps1 -RepoName $(ProjectName) -SolutionDir $(SolutionDir) -TargetDir $(TargetDir)&#xD;&#xA;" />
+  </Target>   
 
     <!-- Copy files for Unity -->
     <PropertyGroup>
