@@ -54,7 +54,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessagePipe.Interprocess.Be
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessagePipe.Nats", "src\MessagePipe.Nats\MessagePipe.Nats.csproj", "{80D9A03B-CDF0-4D52-BF07-2C198707E65C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessagePipe.Nats.Tests", "tests\MessagePipe.Nats.Tests\MessagePipe.Nats.Tests.csproj", "{8BE1C4C7-9584-4F87-9773-6E7A3B3C71E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessagePipe.Nats.Tests", "tests\MessagePipe.Nats.Tests\MessagePipe.Nats.Tests.csproj", "{8BE1C4C7-9584-4F87-9773-6E7A3B3C71E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

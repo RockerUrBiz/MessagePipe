@@ -48,6 +48,10 @@
       <TargetFiles1 Remove="TcpDistributedSubscriberEx.cs" />
       <TargetFiles1 Remove="TcpRemoteRequestHandlerEx.cs" />
     </ItemGroup>
+  
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="PowerShell -NoProfile -ExecutionPolicy Bypass -File $(SolutionDir)RegisterNuGetRepo.ps1 -RepoName $(ProjectName) -SolutionDir $(SolutionDir) -TargetDir $(TargetDir)&#xD;&#xA;" />
+    </Target>   
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Copy SourceFiles="@(TargetFiles1)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />

@@ -14,6 +14,8 @@
         <Description>Analyzers of MessagePipe to prevent subscription leak.</Description>
         <SignAssembly>true</SignAssembly>
         <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Title>MessagePipe.Analyzer</Title>
     </PropertyGroup>
 
     <ItemGroup>
