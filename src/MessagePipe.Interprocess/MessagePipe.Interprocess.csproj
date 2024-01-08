@@ -14,6 +14,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="..\..\README.md">
+          <Pack>True</Pack>
+          <PackagePath>\</PackagePath>
+        </None>
         <None Include="Icon.png" Pack="true" PackagePath="/" />
     </ItemGroup>
 
@@ -37,6 +41,10 @@
         <Title>RUB-TrueSpark-MessagePipe.Interprocess</Title>
         <Authors>Cysharp/RocketUrBiz</Authors>
         <Company>Cysharp/RocketUrBiz</Company>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <IncludeSymbols>True</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Version>2</Version>
     </PropertyGroup>
     <ItemGroup>
         <TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs" />
@@ -49,9 +57,21 @@
       <TargetFiles1 Remove="TcpRemoteRequestHandlerEx.cs" />
     </ItemGroup>
   
+    <PropertyGroup>
+      <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);SetPackageVersion</GenerateNuspecDependsOn>
+    </PropertyGroup>
+
+    <Target Name="SetPackageVersion" DependsOnTargets="Build">
+      <PropertyGroup>
+        <!-- <PackageVersion>$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmmss&quot;))</PackageVersion> -->
+        <!-- You can customize the format and the rule about how version increases here. -->
+        <PackageVersion>$([System.DateTime]::Now.ToString("2.MM.dd"))</PackageVersion>
+      </PropertyGroup>
+    </Target>
+  
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="PowerShell -NoProfile -ExecutionPolicy Bypass -File $(SolutionDir)RegisterNuGetRepo.ps1 -RepoName $(ProjectName) -SolutionDir $(SolutionDir) -TargetDir $(TargetDir)&#xD;&#xA;" />
-    </Target>   
+      <Exec Command="PowerShell -NoProfile -ExecutionPolicy Bypass -File $(ProjectDir)RegisterNuGetRepoV3.ps1 -RepoName $(ProjectName)" />
+    </Target>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Copy SourceFiles="@(TargetFiles1)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />

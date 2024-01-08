@@ -12,6 +12,6 @@ public sealed class TcpRemoteRequestHandlerEx<TRequest, TResponse> : IRemoteRequ
 
     public async System.Threading.Tasks.ValueTask<TResponse> InvokeAsync(TRequest request, System.Threading.CancellationToken cancellationToken = default)
     {
-        return await worker.RequestAsync<TRequest, TResponse>(request, cancellationToken);
+        return await worker.RequestAsync<TRequest, TResponse>(request, cancellationToken).ConfigureAwait(false);
     }
 }

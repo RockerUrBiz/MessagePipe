@@ -33,7 +33,7 @@ namespace MessagePipe.Interprocess.Async.Sockets
             Channel<byte[]> channel;
 
             int initializedClient = 0;
-            Lazy<SocketTcpClientEx> client; // Note the use of SocketTcpClientEx
+            Lazy<SocketTcpClientEx?> client; // Note the use of SocketTcpClientEx
 
             int messageId = 0;
             ConcurrentDictionary<int, TaskCompletionSource<IInterprocessValue>> responseCompletions;
@@ -55,47 +55,59 @@ namespace MessagePipe.Interprocess.Async.Sockets
                 channel = Channel.CreateUnbounded<byte[]>(); // or any other configuration that suits your needs
 
 
-                this.server = new Lazy<SocketTcpServerEx>(() =>
-                                                          {
-                                                              // Determine the AddressFamily from the host
-                                                              System.Net.IPAddress ipAddress = System.Net.IPAddress.None;
+                this.server = new Lazy<SocketTcpServerEx>(valueFactory: () =>
+                    {
+                        // Determine the AddressFamily from the host
+                        System.Net.IPAddress ipAddress = System.Net.IPAddress.None;
 
-                                                              if (System.Net.IPAddress.TryParse(optionsEx.Host, out ipAddress))
-                                                              {
-                                                                  // If optionsEx.Host is already an IP address
+                        if (System.Net.IPAddress.TryParse(ipString: optionsEx.Host, address: out ipAddress))
+                        {
+                            // If optionsEx.Host is already an IP address
 
-                                                                  return new SocketTcpServerEx(ipAddress.AddressFamily, System.Net.Sockets.ProtocolType.Tcp,
-                                                                                               null, null, _saeaSaeaPool, optionsEx.Host, optionsEx.Port,
-                                                                                               optionsEx.InitialPoolCapacity, optionsEx.MaxPoolSize,
-                                                                                               optionsEx.MinPoolSize, optionsEx.MaxIdleTime, optionsEx.ContractionInterval);
+                            return new SocketTcpServerEx(addressFamily: ipAddress.AddressFamily,
+                                                         protocolType: System.Net.Sockets.ProtocolType.Tcp,
+                                                         sendBufferSize: null,
+                                                         recvBufferSize: null,
+                                                         pool: _saeaSaeaPool,
+                                                         ipAddress: optionsEx.Host,
+                                                         port: optionsEx.Port,
+                                                         initialPoolCapacity: optionsEx.InitialPoolCapacity,
+                                                         maxPoolSize: optionsEx.MaxPoolSize,
+                                                         minPoolSize: optionsEx.MinPoolSize,
+                                                         maxIdleTime: optionsEx.MaxIdleTime,
+                                                         contractionInterval: optionsEx.ContractionInterval);
 
-                                                                  //return new SocketTcpServerEx(ipAddress.AddressFamily, System.Net.Sockets.ProtocolType.Tcp, null, null, _saeaSaeaPool, optionsEx.Host, optionsEx.Port);
+                            //return new SocketTcpServerEx(ipAddress.AddressFamily, System.Net.Sockets.ProtocolType.Tcp, null, null, _saeaSaeaPool, optionsEx.Host, optionsEx.Port);
+                        }
 
+                        // Resolve the hostname to an IPAddress
+                        var addresses = System.Net.Dns.GetHostAddresses(hostNameOrAddress: optionsEx.Host);
 
-                                                              }
+                        if (addresses.Length == 0)
+                        {
+                            throw new InvalidOperationException(message: "Unable to resolve host: " + optionsEx.Host);
+                        }
 
-                                                              // Resolve the hostname to an IPAddress
-                                                              var addresses = System.Net.Dns.GetHostAddresses(optionsEx.Host);
+                        // Use the first address in the list
+                        ipAddress = addresses[0];
 
-                                                              if (addresses.Length == 0)
-                                                              {
-                                                                  throw new InvalidOperationException("Unable to resolve host: " + optionsEx.Host);
-                                                              }
+                        //return new SocketTcpServerEx(ipAddress.AddressFamily, System.Net.Sockets.ProtocolType.Tcp, null, null, _saeaSaeaPool, optionsEx.Host, optionsEx.Port);
 
-                                                              // Use the first address in the list
-                                                              ipAddress = addresses[0];
+                        return new SocketTcpServerEx(addressFamily: ipAddress.AddressFamily,
+                                                        protocolType: System.Net.Sockets.ProtocolType.Tcp,
+                                                        sendBufferSize: null,
+                                                        recvBufferSize: null,
+                                                        pool: _saeaSaeaPool,
+                                                        ipAddress: optionsEx.Host,
+                                                        port: optionsEx.Port,
+                                                        initialPoolCapacity: optionsEx.InitialPoolCapacity,
+                                                        maxPoolSize: optionsEx.MaxPoolSize,
+                                                        minPoolSize: optionsEx.MinPoolSize,
+                                                        maxIdleTime: optionsEx.MaxIdleTime,
+                                                        contractionInterval: optionsEx.ContractionInterval);
+                    });
 
-                                                              //return new SocketTcpServerEx(ipAddress.AddressFamily, System.Net.Sockets.ProtocolType.Tcp, null, null, _saeaSaeaPool, optionsEx.Host, optionsEx.Port);
-
-                                                              return new SocketTcpServerEx(ipAddress.AddressFamily, System.Net.Sockets.ProtocolType.Tcp,
-                                                                                           null, null, _saeaSaeaPool, optionsEx.Host, optionsEx.Port,
-                                                                                           optionsEx.InitialPoolCapacity, optionsEx.MaxPoolSize,
-                                                                                           optionsEx.MinPoolSize, optionsEx.MaxIdleTime, optionsEx.ContractionInterval);
-                                                          });
-
-
-
-                this.client = new Lazy<SocketTcpClientEx>(() => SocketTcpClientEx.Connect(optionsEx.Host, optionsEx.Port, _saeaSaeaPool));
+                this.client = new Lazy<SocketTcpClientEx?>(valueFactory: () => SocketTcpClientEx.Connect(host: optionsEx.Host, port: optionsEx.Port, pool: _saeaSaeaPool));
 
                 if (optionsEx.HostAsServer != null && optionsEx.HostAsServer.Value)
                 {

@@ -37,14 +37,32 @@
         </Compile>
     </ItemGroup>
   
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <PropertyGroup>
+      <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);SetPackageVersion</GenerateNuspecDependsOn>
+    </PropertyGroup>
+
+    <Target Name="SetPackageVersion" DependsOnTargets="Build">
+      <PropertyGroup>
+        <!-- <PackageVersion>$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmmss&quot;))</PackageVersion> -->
+        <!-- You can customize the format and the rule about how version increases here. -->
+        <PackageVersion>$([System.DateTime]::Now.ToString("2.MM.dd"))</PackageVersion>
+      </PropertyGroup>
+    </Target>
+  
+    <!--<Target Name="PostBuild" AfterTargets="PostBuildEvent">
       <Exec Command="PowerShell -NoProfile -ExecutionPolicy Bypass -File $(SolutionDir)RegisterNuGetRepo.ps1 -RepoName $(ProjectName) -SolutionDir $(SolutionDir) -TargetDir $(TargetDir)&#xD;&#xA;" />
-    </Target>   
+    </Target>-->   
+  
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="PowerShell -NoProfile -ExecutionPolicy Bypass -File $(ProjectDir)RegisterNuGetRepoV2.ps1 -RepoName $(ProjectName)" />
+    </Target>
 
     <!-- Copy files for Unity -->
     <PropertyGroup>
         <DestinationRoot>$(MSBuildProjectDirectory)\..\MessagePipe.Unity\Assets\Plugins\MessagePipe\Runtime\</DestinationRoot>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Title>RUB-TrueSpark-MessagePipe</Title>
+        <IncludeSymbols>True</IncludeSymbols>
     </PropertyGroup>
     <ItemGroup>
         <TargetFiles1 Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*;_InternalVisibleTo.cs" />
