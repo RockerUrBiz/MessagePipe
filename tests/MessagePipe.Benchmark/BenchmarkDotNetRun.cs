@@ -7,11 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Prism.Events;
 using PubSub;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 using Zenject;
 
 namespace MessagePipe.Benchmark
@@ -41,7 +37,9 @@ namespace MessagePipe.Benchmark
             prism = new Prism.Events.EventAggregator().GetEvent<Message>();
             prismStrong = new Prism.Events.EventAggregator().GetEvent<Message>();
 
-            var mdiatr = new ServiceCollection().AddMediatR(typeof(PublishOps).Assembly).BuildServiceProvider();
+            var mdiatr = new ServiceCollection().AddMediatR(cfg =>
+                cfg.RegisterServicesFromAssembly(typeof(PublishOps).Assembly)).BuildServiceProvider();
+
             medi = mdiatr.GetRequiredService<IMediator>();
 
 
