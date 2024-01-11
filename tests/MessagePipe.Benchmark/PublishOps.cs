@@ -1,7 +1,7 @@
 ﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
+using CommunityToolkit.Mvvm.Messaging;
 using Easy.MessageHub;
-
 using MediatR;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -83,8 +83,8 @@ namespace MessagePipe.Benchmark
         IInvoke[] interfaceArray;
         Action[] actionDelegate;
 
-        Microsoft.Toolkit.Mvvm.Messaging.StrongReferenceMessenger toolkitStrong;
-        Microsoft.Toolkit.Mvvm.Messaging.WeakReferenceMessenger toolkitWeak;
+        StrongReferenceMessenger toolkitStrong;
+        WeakReferenceMessenger toolkitWeak;
 
 #if WinBenchmark
         Messenger mvvmLight;
@@ -98,7 +98,10 @@ namespace MessagePipe.Benchmark
             prism = new Prism.Events.EventAggregator().GetEvent<Message>();
             prismStrong = new Prism.Events.EventAggregator().GetEvent<Message>();
 
-            var mdiatr = new ServiceCollection().AddMediatR(typeof(PublishOps).Assembly).BuildServiceProvider();
+            var mdiatr = new ServiceCollection().AddMediatR(cfg => 
+                cfg.RegisterServicesFromAssembly(typeof(PublishOps).Assembly)).BuildServiceProvider();
+
+
             medi = mdiatr.GetRequiredService<IMediator>();
 
 
@@ -135,8 +138,8 @@ namespace MessagePipe.Benchmark
             mvvmLightStrong = new Messenger();
 #endif
 
-            toolkitStrong = new Microsoft.Toolkit.Mvvm.Messaging.StrongReferenceMessenger();
-            toolkitWeak = new Microsoft.Toolkit.Mvvm.Messaging.WeakReferenceMessenger();
+            toolkitStrong = new StrongReferenceMessenger();
+            toolkitWeak = new WeakReferenceMessenger();
 
 
 
