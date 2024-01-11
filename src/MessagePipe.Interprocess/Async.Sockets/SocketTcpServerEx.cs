@@ -65,10 +65,6 @@ internal sealed class SocketTcpServerEx : IDisposable
         socket.Listen(MaxConnections); // You can adjust the backlog parameter as needed
     }
 
-
-    // Rest of your class implementation...
-
-
     public void StartAcceptLoopAsync(Action<SocketTcpClientEx> onAccept, CancellationToken cancellationToken)
     {
         void AcceptCallback(object sender, SocketAsyncEventArgs e)
@@ -168,6 +164,7 @@ internal sealed class SocketTcpServerEx : IDisposable
 
         // Rent a new SocketAsyncEventArgs instance from the pool for the next accept operation
         var newArgs = saeaPool.Rent();
+
         if (newArgs != null)
         {
             newArgs.AcceptSocket = null; // Reset for reuse

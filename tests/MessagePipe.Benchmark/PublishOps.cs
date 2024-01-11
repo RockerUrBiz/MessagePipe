@@ -3,19 +3,21 @@
 using Easy.MessageHub;
 
 using MediatR;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Prism.Events;
+
 using PubSub;
+
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Zenject;
-using Microsoft.Toolkit.Mvvm.Messaging;
 
 #if WinBenchmark
 using GalaSoft.MvvmLight.Messaging;
@@ -40,7 +42,7 @@ namespace MessagePipe.Benchmark
 
     public class LambdaRef2
     {
-        public MessageHandler<object, Message> Delegate;
+        public CommunityToolkit.Mvvm.Messaging.MessageHandler<object, Message> Delegate;
 
         public LambdaRef2()
         {
