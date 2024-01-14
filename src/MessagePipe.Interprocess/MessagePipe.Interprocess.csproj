@@ -70,7 +70,7 @@
     </Target>
   
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="PowerShell -NoProfile -ExecutionPolicy Bypass -File $(ProjectDir)RegisterNuGetRepoV3.ps1 -RepoName $(ProjectName)" />
+      <Exec Command="PowerShell -NoProfile -ExecutionPolicy Bypass -File $(ProjectDir)RegisterNuGetRepoV2.ps1 -RepoName $(ProjectName)" />
     </Target>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
