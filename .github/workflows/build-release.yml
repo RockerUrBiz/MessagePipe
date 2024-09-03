@@ -130,7 +130,7 @@ jobs:
           draft: true
           prerelease: false
       # Download(All) Artifacts to current directory
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
       # Upload to NuGet
       - run: dotnet nuget push "./nuget/*.nupkg" --skip-duplicate -s https://www.nuget.org/api/v2/package -k ${{ secrets.NUGET_KEY }}
       # Upload to Releases(unitypackage)
